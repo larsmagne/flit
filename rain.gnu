@@ -1,4 +1,4 @@
-set terminal png size 500, 350 
+set terminal png size 1024, 600 
 set output 'rain.png'
 set style data lines
 set xrange [ 0 : * ] noreverse nowriteback
