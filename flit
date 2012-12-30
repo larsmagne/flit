@@ -85,6 +85,13 @@ sub cleanup {
     }
 }
 
+sub mplayer_pid {
+    open(PID, "/tmp/mplayer.pid");
+    my $pid = <PID>;
+    close PID;
+    return $pid;
+}
+
 while (true) {
     # Poll yr.no once per hour.
     if (! ($i++ % 60)) {
@@ -112,8 +119,9 @@ while (true) {
 	}
     }
     $sleeps = 0;
+    $mplayer_pid = mplayer_pid();
     while ($sleeps++ < 60) {
 	sleep(1);
-	system("raisewindow", "qiv");
+	last if $mplayer_pid != mplayer_pid();
     }
 }
