@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use XML::LibXML;
+use URI::Escape;
+
+sub get_rain {
+    my @rain;
+    
+    system("curl",
+	   "-s",
+	   "-o", "/tmp/rain.xml",
+	   "http://www.yr.no/stad/Noreg/Oslo/Oslo/Oslo/varsel_time_for_time.xml");
+    my $parser = XML::LibXML->new();
+    my $xmldoc = $parser->parse_file("/tmp/rain.xml");
+    my @entries = $xmldoc->getElementsByTagName('precipitation');
+
+    my $i = 0;
+    foreach $entry (@entries) {
+	$rain[$i++] = $entry->getAttribute("value");
+	break if ($i > 24);
+    }
+
+    return @rain;
+}
+
+sub get_temperature {
+    system("curl",
+	   "-s",
+	   "-o", "/tmp/weathergoose.xml",
+	   "http://rusty.gnus.org/data.xml");
+    my $parser = XML::LibXML->new();
+    my $xmldoc = $parser->parse_file("/tmp/weathergoose.xml");
+    my @entries = $xmldoc->getElementsByTagName('field');
+    my @temps;
+    my $i;
+    foreach $entry (@entries) {
+	if ($entry->getAttribute("key") eq "TempC") {
+	    $temps[$i++] = $entry->getAttribute("value");
+	}
+    }
+    return @temps;
+}
+
+@rain = get_rain();
+@temps = get_temperature();
