@@ -17,7 +17,7 @@ sub get_rain {
     my $i = 0;
     foreach $entry (@entries) {
 	$rain[$i++] = $entry->getAttribute("value");
-	break if ($i > 24);
+	last if ($i > 24);
     }
 
     return @rain;
@@ -41,16 +41,33 @@ sub get_temperature {
     return @temps;
 }
 
+sub make_temperature_image {
+    my $outside = shift;
+    open(DATA, ">textdata.tex") || die;
+
+# We don't need two decimals.
+    chop($outside);
+    print DATA $outside . "°C";
+    close DATA;
+    
+    system("latex", "text.tex");
+    system("dvips -f < text.dvi > text.ps");
+    system("gs -q -sDEVICE=ppm -r200x200 -g1500x2200 -sOutputFile=- -dNOPAUSE text.ps < /dev/null | pnminvert | pnmcrop | pnmmargin -black 10 | pnmtopng -transparent black > text.png");
+}
+
+sub make_rain_image {
+    open(DATA, ">rain.dat") || die;
+    foreach $value (@rain) {
+	print DATA "$value\n";
+    }
+    close DATA;
+    system("gnuplot", "rain.gnu");
+    system("pngtopnm rain.png | pnminvert | pnmcrop | pnmtopng -transparent black > rainline.png");
+}
+
 @rain = get_rain();
 @temps = get_temperature();
 
-open(DATA, ">textdata.tex") || die;
-$outside = $temps[1];
-# We don't need two decimals.
-chop($outside);
-print DATA $outside . "°C";
-close DATA;
-
-system("latex", "text.tex");
-system("dvips -f < text.dvi > text.ps");
-system("gs -q -sDEVICE=ppm -r200x200 -g1500x2200 -sOutputFile=- -dNOPAUSE text.ps < /dev/null | pnminvert | pnmcrop | pnmmargin -black 10 | pnmtopng -transparent black > text.png");
+make_temperature_image($temps[1]);
+make_rain_image();
+make_montage();
