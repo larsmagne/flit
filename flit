@@ -52,7 +52,7 @@ sub make_temperature_image {
     
     system("latex", "text.tex");
     system("dvips -f < text.dvi > text.ps");
-    system("gs -q -sDEVICE=ppm -r200x200 -g1500x2200 -sOutputFile=- -dNOPAUSE text.ps < /dev/null | pnminvert | pnmcrop | pnmmargin -black 10 | pnmtopng -transparent black > text.png");
+    system("gs -q -sDEVICE=ppm -r200x200 -g1500x2200 -sOutputFile=- -dNOPAUSE text.ps < /dev/null | pnminvert | pnmcrop | pnmmargin -black 10 > text.pnm");
 }
 
 sub make_rain_image {
@@ -62,12 +62,41 @@ sub make_rain_image {
     }
     close DATA;
     system("gnuplot", "rain.gnu");
-    system("pngtopnm rain.png | pnminvert | pnmcrop | pnmtopng -transparent black > rainline.png");
+    system("pngtopnm rain.png | pnminvert > rain.pnm");
 }
 
-@rain = get_rain();
-@temps = get_temperature();
+sub make_montage {
+    my $xsize = `pnmfile text.pnm`;
+    my @xsize = split(/ /, $xsize);
+    $xsize = $xsize[2];
+    print "$xsize\n";
+    my $xpos = 1024 - $xsize - 20;
+    system("pnmpaste -replace text.pnm $xpos 20 rain.pnm | pnmtopng -transparent black > screen.png");
+}
 
-make_temperature_image($temps[1]);
-make_rain_image();
-make_montage();
+while (true) {
+    # Poll yr.no once per hour.
+    if (! ($i++ % 60)) {
+	@rain = get_rain();
+	make_rain_image();
+    }
+    # Poll my temperature sensor once per minute.
+    @temps = get_temperature();
+    
+    make_temperature_image($temps[1]);
+    make_montage();
+
+    $old_pid = $qiv_pid;
+    $qiv_pid = fork();
+    if (! $qiv_pid) {
+	exec("/usr/local/src/qiv-2.2.4/qiv", "-p",
+	     #"--display", ":1",
+	     "screen.png");
+    } else {
+	if ($old_pid) {
+	    sleep(1);
+	    kill 9, $old_pid;
+	}
+    }
+    sleep(60);
+}
