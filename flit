@@ -43,3 +43,14 @@ sub get_temperature {
 
 @rain = get_rain();
 @temps = get_temperature();
+
+open(DATA, ">textdata.tex") || die;
+$outside = $temps[1];
+# We don't need two decimals.
+chop($outside);
+print DATA $outside . "°C";
+close DATA;
+
+system("latex", "text.tex");
+system("dvips -f < text.dvi > text.ps");
+system("gs -q -sDEVICE=ppm -r200x200 -g1500x2200 -sOutputFile=- -dNOPAUSE text.ps < /dev/null | pnminvert | pnmcrop | pnmmargin -black 10 | pnmtopng -transparent black > text.png");
