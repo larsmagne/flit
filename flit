@@ -74,6 +74,17 @@ sub make_montage {
     system("pnmpaste -replace text.pnm $xpos 20 rain.pnm | pnmtopng -transparent black > screen.png");
 }
 
+sub cleanup {
+    my @files = ("text.pnm", "textdata.tex", "text.ps", "text.aux",
+		 "textdata.aux", "text.dvi", "text.log", "rain.dat",
+		 "missfont.log", "rain.png");
+    foreach $file (@files) {
+	if (-e $file) {
+	    unlink $file;
+	}
+    }
+}
+
 while (true) {
     # Poll yr.no once per hour.
     if (! ($i++ % 60)) {
@@ -86,6 +97,8 @@ while (true) {
     make_temperature_image($temps[1]);
     make_montage();
 
+    cleanup();
+    
     $old_pid = $qiv_pid;
     $qiv_pid = fork();
     if (! $qiv_pid) {
