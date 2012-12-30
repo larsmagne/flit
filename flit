@@ -103,7 +103,7 @@ while (true) {
     $qiv_pid = fork();
     if (! $qiv_pid) {
 	exec("/usr/local/src/qiv-2.2.4/qiv", "-p",
-	     #"--display", ":1",
+	     "--display", ":1",
 	     "screen.png");
     } else {
 	if ($old_pid) {
@@ -111,5 +111,9 @@ while (true) {
 	    kill 9, $old_pid;
 	}
     }
-    sleep(60);
+    $sleeps = 0;
+    while ($sleeps++ < 60) {
+	sleep(1);
+	system("raisewindow", "qiv");
+    }
 }
