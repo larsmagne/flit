@@ -45,7 +45,7 @@ sub make_temperature_image {
     my $outside = shift;
     open(DATA, ">textdata.tex") || die;
 
-# We don't need two decimals.
+    # We don't need two decimals.
     chop($outside);
     print DATA $outside . "°C";
     close DATA;
@@ -69,7 +69,6 @@ sub make_montage {
     my $xsize = `pnmfile text.pnm`;
     my @xsize = split(/ /, $xsize);
     $xsize = $xsize[2];
-    print "$xsize\n";
     my $xpos = 1024 - $xsize - 20;
     system("pnmpaste -replace text.pnm $xpos 20 rain.pnm | pnmtopng -transparent black > screen.png");
 }
