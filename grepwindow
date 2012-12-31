@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+# I probably didn't write this program.  I can tell because
+# of reasons.
+
+use X11::Protocol;
+
+$x = X11::Protocol->new(":1");
+
+sub get_window_by_name {
+    _get_window_by_name($x->{'root'}, $_[0]);
+}
+
+@windows = ();
+
+sub _get_window_by_name {
+    my($root, $searchname) = @_;
+    my($dummy, $dummy2, @new_kids) = $x->QueryTree($root);
+    foreach my $k (@new_kids) {
+	my $atomnr;
+	#warn sprintf("%x\n", $k);
+	foreach my $atom ($x->ListProperties($k)) {
+	    if ($x->GetAtomName($atom) eq "WM_CLASS") {
+		$atomnr = $atom;
+		last;
+	    }
+	}
+	if (defined $atomnr) {
+	    my($classprop) = $x->GetProperty($k, $atomnr, "AnyPropertyType",
+					     0, 256, 0);
+	    my($class, $name) = split(/\0/, $classprop);
+	    if ($class =~ /$searchname/) {
+		print "$k\n";
+	    }
+	}
+	my $ret = _get_window_by_name($k, $searchname);
+	if (defined $ret) {
+	    push @windows, $ret;
+	}
+    } undef;
+}
+
+get_window_by_name($ARGV[0]);
