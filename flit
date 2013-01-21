@@ -93,8 +93,8 @@ sub mplayer_id {
     return $id;
 }
 
+$mplayer_id = mplayer_id();
 while (true) {
-    $mplayer_id = mplayer_id();
     # Poll yr.no once per hour.
     if (! ($i++ % 60)) {
 	@rain = get_rain();
@@ -124,8 +124,15 @@ while (true) {
     while ($sleeps++ < 60) {
 	sleep(1);
 	$new_id = mplayer_id();
-	print "$new_id\n";
-	last if $new_id && $mplayer_id != $new_id;
+	if (! $new_id) {
+	    $mplayer_id = 0;
+	}
+	if ($new_id && $mplayer_id != $new_id) {
+	    $mplayer_id = $new_id;
+	    last;
+	}
+	do {
+	    $kid = waitpid(-1, WNOHANG);
+	} while $kid > 0;
     }
-    $mplayer_id = $new_id;
 }
