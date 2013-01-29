@@ -2,6 +2,7 @@
 
 use XML::LibXML;
 use URI::Escape;
+use POSIX qw(:sys_wait_h);
 
 sub get_rain {
     my @rain;
@@ -105,7 +106,6 @@ while (true) {
     
     make_temperature_image($temps[1]);
     make_montage();
-
     cleanup();
     
     $old_pid = $qiv_pid;
@@ -132,7 +132,7 @@ while (true) {
 	    last;
 	}
 	do {
-	    $kid = waitpid(-1, WNOHANG);
+	    $kid = waitpid -1, WNOHANG;
 	} while $kid > 0;
     }
 }
