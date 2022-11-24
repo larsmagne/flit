@@ -10,7 +10,7 @@ sub get_rain {
     system("curl",
 	   "-s",
 	   "-o", "/tmp/rain.xml",
-	   "http://www.yr.no/stad/Noreg/Oslo/Oslo/Oslo/varsel_time_for_time.xml");
+	   "https://api.met.no/weatherapi/locationforecast/2.0/classic?lon=10.744587373145249&lat=59.92675174365245");
     my $parser = XML::LibXML->new();
     my $xmldoc = $parser->parse_file("/tmp/rain.xml");
     my @entries = $xmldoc->getElementsByTagName('precipitation');
@@ -51,7 +51,7 @@ sub make_temperature_image {
 
     ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
     printf DATA "%02d:%02d", $hour, $min;
-    print DATA "\\\\", $outside . "°C";
+    print DATA "\\\\", $outside . "Â°C";
     close DATA;
     
     system("latex", "text.tex");
@@ -111,7 +111,7 @@ while (true) {
     $old_pid = $qiv_pid;
     $qiv_pid = fork();
     if (! $qiv_pid) {
-	exec("/usr/local/src/qiv-2.2.4/qiv", "-p",
+	exec("/usr/src/qiv-2.2.4/qiv", "-p",
 	     "--display", ":1",
 	     "screen.png");
     } else {
